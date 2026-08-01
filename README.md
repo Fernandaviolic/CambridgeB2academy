@@ -1,12 +1,20 @@
-# Cambridge B2 Academy
+# Cambridge B2 Academy v2
 
-Repositorio independiente para practicar Cambridge B2 First for Schools.
+PWA de práctica para Cambridge B2 First for Schools, con perfil local por estudiante.
+
+## Cambios de esta versión
+- Pantalla inicial **Welcome! What's your first name?**
+- Dashboard personalizado con el nombre del estudiante.
+- Un solo repositorio y una sola URL para distintos alumnos.
+- Progreso independiente en cada dispositivo.
+- Settings para cambiar el nombre.
+- Reset de progreso que conserva el nombre.
+- Contenido e interfaz en inglés.
+- Práctica ilimitada de Writing, Reading, Use of English, Vocabulary y Connectors.
 
 ## Publicar en Vercel
-1. Crea un repositorio nuevo en GitHub, por ejemplo `cambridge-b2-academy`.
-2. Sube todos los archivos de esta carpeta.
-3. En Vercel, selecciona **Add New Project** e importa ese repositorio.
-4. Framework preset: **Other**. No requiere comando de build.
-5. Presiona **Deploy**.
+1. Reemplaza los archivos del repositorio B2 por los de esta carpeta.
+2. Haz commit y push a GitHub.
+3. Vercel desplegará la actualización automáticamente.
 
-El progreso se guarda localmente en el dispositivo. No usa cuentas ni base de datos.
+Framework preset: **Other**. No requiere comando de build.

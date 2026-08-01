@@ -1,12 +1,21 @@
-const KEY='cambridge-b2-academy-progress-v1';
-const defaultState={xp:0,completed:0,modules:{writing:0,reading:0,useofenglish:0,vocabulary:0,connectors:0},indices:{writing:0,reading:0,uoe:0,connectors:0,vocabQuiz:0},writingDrafts:{},diagnostic:null};
+const KEY='cambridge-b2-academy-progress-v2';
+const defaultState={studentName:'',xp:0,completed:0,modules:{writing:0,reading:0,useofenglish:0,vocabulary:0,connectors:0},indices:{writing:0,reading:0,uoe:0,connectors:0,vocabQuiz:0},writingDrafts:{},diagnostic:null};
 let state=loadState();
 function loadState(){try{const old=JSON.parse(localStorage.getItem(KEY)||'{}');return {...defaultState,...old,modules:{...defaultState.modules,...(old.modules||{})},indices:{...defaultState.indices,...(old.indices||{})},writingDrafts:{...(old.writingDrafts||{})}}}catch{return structuredClone(defaultState)}}
 function saveState(){localStorage.setItem(KEY,JSON.stringify(state));renderDashboard()}
 function completePractice(module,xp){state.modules[module]=(state.modules[module]||0)+1;state.completed+=1;state.xp+=xp;saveState()}
-function renderDashboard(){xpValue.textContent=state.xp;completedValue.textContent=state.completed;accuracyValue.textContent=state.diagnostic?`${state.diagnostic.score}/${state.diagnostic.total}`:'—';levelValue.textContent=state.diagnostic?state.diagnostic.label:'Not tested';diagnosticBadge.textContent=state.diagnostic?'Completed':'Not completed';Object.entries(state.modules).forEach(([k,v])=>{const el=document.getElementById(`${k}Badge`);if(el)el.textContent=`${v} practice${v===1?'':'s'}`})}
+function renderDashboard(){welcomeHeading.textContent=state.studentName?`Welcome back, ${state.studentName}!`:'Welcome!';xpValue.textContent=state.xp;completedValue.textContent=state.completed;accuracyValue.textContent=state.diagnostic?`${state.diagnostic.score}/${state.diagnostic.total}`:'—';levelValue.textContent=state.diagnostic?state.diagnostic.label:'Not tested';diagnosticBadge.textContent=state.diagnostic?'Completed':'Not completed';Object.entries(state.modules).forEach(([k,v])=>{const el=document.getElementById(`${k}Badge`);if(el)el.textContent=`${v} practice${v===1?'':'s'}`})}
 function openScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.open===id));window.scrollTo({top:0,behavior:'smooth'})}
 document.querySelectorAll('[data-open]').forEach(b=>b.addEventListener('click',()=>openScreen(b.dataset.open)));
+function showWelcomeIfNeeded(){welcomeScreen.classList.toggle('hidden',Boolean(state.studentName));if(!state.studentName)setTimeout(()=>studentNameInput.focus(),50)}
+function saveStudentName(value){const clean=String(value||'').trim().replace(/\s+/g,' ');if(!clean){welcomeError.textContent='Please enter your first name.';return false}state.studentName=clean;saveState();welcomeScreen.classList.add('hidden');welcomeError.textContent='';return true}
+continueBtn.addEventListener('click',()=>saveStudentName(studentNameInput.value));
+studentNameInput.addEventListener('keydown',e=>{if(e.key==='Enter')saveStudentName(studentNameInput.value)});
+settingsBtn.addEventListener('click',()=>{settingsName.value=state.studentName;settingsPanel.classList.remove('hidden');settingsPanel.setAttribute('aria-hidden','false');setTimeout(()=>settingsName.focus(),50)});
+closeSettings.addEventListener('click',()=>{settingsPanel.classList.add('hidden');settingsPanel.setAttribute('aria-hidden','true')});
+settingsPanel.addEventListener('click',e=>{if(e.target===settingsPanel)closeSettings.click()});
+saveSettings.addEventListener('click',()=>{const clean=settingsName.value.trim().replace(/\s+/g,' ');if(!clean)return;state.studentName=clean;saveState();settingsPanel.classList.add('hidden');settingsPanel.setAttribute('aria-hidden','true')});
+
 
 const diagnostic=[
 ['The course was cancelled ___ a lack of participants.',['because','because of','although'],1],
@@ -68,8 +77,8 @@ const connectorSets=[
 function renderConnectors(){const i=state.indices.connectors%connectorSets.length,set=connectorSets[i];connectorsCounter.textContent=`Practice ${i+1} of ${connectorSets.length}`;connectorQuiz.innerHTML=set.map((q,qi)=>`<fieldset class="panel"><legend>${qi+1}. ${q[0]}</legend><select name="c${qi}"><option value="">Choose a connector</option>${q[1].map(o=>`<option value="${o}">${o}</option>`).join('')}</select></fieldset>`).join('');connectorFeedback.textContent=''}
 checkConnectors.addEventListener('click',()=>{const set=connectorSets[state.indices.connectors%connectorSets.length],fd=new FormData(connectorQuiz);let score=0;set.forEach((q,i)=>{if(fd.get(`c${i}`)===q[2])score++});if(score===set.length){completePractice('connectors',35);connectorFeedback.className='feedback success';connectorFeedback.textContent=`Perfect! ${score}/${set.length}. +35 XP.`}else{connectorFeedback.className='feedback error';connectorFeedback.textContent=`You got ${score}/${set.length}. Think about the relationship between the ideas.`}});nextConnectors.addEventListener('click',()=>{state.indices.connectors=(state.indices.connectors+1)%connectorSets.length;saveState();renderConnectors()});
 
-resetBtn.addEventListener('click',()=>{if(confirm('Reset all saved B2 progress on this device?')){state=structuredClone(defaultState);localStorage.removeItem(KEY);renderAll()}});
+resetBtn.addEventListener('click',()=>{if(confirm('Reset all saved B2 progress on this device?')){const name=state.studentName;state=structuredClone(defaultState);state.studentName=name;localStorage.setItem(KEY,JSON.stringify(state));renderAll()}});
 let deferredPrompt;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.classList.remove('hidden')});installBtn.addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.classList.add('hidden')});
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js'));
-function renderAll(){renderDashboard();renderDiagnostic();renderWriting();renderReading();renderUoe();renderCard();renderVocabQuiz();renderConnectors()}
+function renderAll(){showWelcomeIfNeeded();renderDashboard();renderDiagnostic();renderWriting();renderReading();renderUoe();renderCard();renderVocabQuiz();renderConnectors()}
 renderAll();
